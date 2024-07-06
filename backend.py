@@ -5,6 +5,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 import os
+import google.generativeai as genai
 
 # Load environment variables
 load_dotenv()
@@ -12,13 +13,20 @@ load_dotenv()
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
 SPOTIPY_REDIRECT_URI = os.getenv('SPOTIPY_REDIRECT_URI')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
+# Configure Google Generative AI
+genai.configure(api_key=GOOGLE_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Initialize Spotify API client
 scope = "playlist-modify-public"
-sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
-                                               client_secret=SPOTIPY_CLIENT_SECRET,
-                                               redirect_uri=SPOTIPY_REDIRECT_URI,
-                                               scope=scope))
+auth_manager = SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
+                            client_secret=SPOTIPY_CLIENT_SECRET,
+                            redirect_uri=SPOTIPY_REDIRECT_URI,
+                            scope=scope)
+
+sp = spotipy.Spotify(auth_manager=auth_manager)
 
 # Load the dataset and define the get_similar_songs function
 file_path = 'tiktokCOPY.xlsx'
@@ -70,20 +78,67 @@ def get_similar_songs(track_name, n=5):
     similar_songs = data.iloc[top_n_indices][['track_name', 'artist_name']]
     return similar_songs
 
-def create_spotify_playlist(track_name, n=5):
+def get_ai_suggested_songs(track_name, n=5):
+    """
+    Get AI suggested songs using Google Generative AI (GeminiAI).
+    
+    Parameters:
+    - track_name (str): The name of the track to find AI suggested songs for.
+    - n (int): The number of AI suggested songs to return. Default is 5.
+    
+    Returns:
+    - DataFrame: A DataFrame containing the names and artists of the AI suggested songs.
+    """
+    prompt = f"""
+    I have a song that I really like and 
+    I would love to discover similar tracks. 
+    The song is called '{track_name}'. 
+    Could you please provide me with 
+    a list of '{n}' songs that have similar 
+    characteristics in terms of genre, mood, 
+    and musical style? I only want the song 
+    names, artist name and no extra text in 
+    the response. Separate the song and the 
+    artist with a comma, and separate each 
+    song with a newline.
+    """
+    
+    response = model.generate_content(prompt)
+    print(response.text)
+    if "I'm sorry" in response.text or "I don't have access" in response.text:
+        return pd.DataFrame(columns=['track_name', 'artist_name'])  # Return empty DataFrame
+    # Extract song names and artist names from the response
+    lines = response.text.split('\n')
+    songs = [line.split(', ') for line in lines if ', ' in line]
+    
+    # Create DataFrame from the extracted song and artist names
+    ai_suggestions = pd.DataFrame(songs, columns=['track_name', 'artist_name'])
+    
+    return ai_suggestions.head(n)
+
+def create_spotify_playlist(track_name, n=5, ai_toggle=False):
     # Get similar songs
     similar_songs = get_similar_songs(track_name, n)
     if isinstance(similar_songs, str):
         return similar_songs
 
+    # Combine AI suggested songs if ai_toggle is True
+    if ai_toggle:
+        ai_songs = get_ai_suggested_songs(track_name, n)
+        combined_songs = pd.concat([similar_songs, ai_songs]).drop_duplicates().reset_index(drop=True)
+    else:
+        combined_songs = similar_songs
+
     # Search for the tracks on Spotify
     track_ids = []
-    for index, row in similar_songs.iterrows():
+    for index, row in combined_songs.iterrows():
         query = f"track:{row['track_name']} artist:{row['artist_name']}"
         results = sp.search(q=query, type='track', limit=1)
         tracks = results['tracks']['items']
         if tracks:
             track_ids.append(tracks[0]['id'])
+        else:
+            print(f"Track '{row['track_name']}' by '{row['artist_name']}' not found on Spotify.")
 
     # Create a new playlist
     user_id = sp.current_user()['id']
@@ -96,8 +151,14 @@ def create_spotify_playlist(track_name, n=5):
 
     return f"Playlist '{playlist_name}' created successfully!"
 
-# Example usage
-track_name = "Lay It Down Gmix - Main"
-n = 5
-result = create_spotify_playlist(track_name, n)
-print(result)
+try:
+    # Example usage
+    track_name = "Lay It Down Gmix - Main"
+    n = 5
+    ai_toggle = True  # Set to True to include AI suggested songs
+    result = create_spotify_playlist(track_name, n, ai_toggle)
+    print(result)
+finally:
+    # Ensure the cleanup of the Spotify client
+    del sp
+    del auth_manager
