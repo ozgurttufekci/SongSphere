@@ -38,15 +38,9 @@ def get_similar_songs(
     song_name: str = Query(description="Song name"),
     artist_name: str = Query(default=None, description="Artist Name"),
 ):
-    print(song_name)
-    print(artist_name)
+    songs:list[dict] = []
 
-    return ExampleSong(
-        song_name="Espresso",
-        artist_name="Christina Carpenter",
-        album_name="Short n' Sweet",
-        track_id="6rqhFgbbKwnb9MLmUQDhG6",
-    )
+    return {"songs": songs}
 
 
 @app.get("/smart-playlist/", tags=["smart-playlist"])
@@ -54,10 +48,9 @@ def get_smart_playlist(
     song_name: str = Query(description="Song name"),
     artist_name: str = Query(default=None, description="Artist Name"),
 ):
-    print(song_name)
-    print(artist_name)
+    songs:list[dict] = []
 
-    return {"she": "onika", "ate": "burgers"}
+    return {"songs": songs}
 
 
 if __name__ == "__main__":
