@@ -1,15 +1,15 @@
 import React from "react";
 import NavBar from "../components/NavBar";
 
-function HomePage() {
+function SmartPlayListPage() {
     return (
         <>
             <NavBar />
             <div id="home-page">
-                <h1>Home Page</h1>
+                <h1>Smart Playlist Page</h1>
             </div>
         </>
     );
 }
 
-export default HomePage;
+export default SmartPlayListPage;

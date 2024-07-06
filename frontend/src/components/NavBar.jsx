@@ -1,5 +1,6 @@
+// Import necessary libraries and components from React and Material-UI
 import React, { useState } from "react";
-import { styled, useTheme } from '@mui/material/styles';
+import { createTheme, ThemeProvider, styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
 import MuiAppBar from '@mui/material/AppBar';
@@ -16,13 +17,14 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import SvgIcon from '@mui/material/SvgIcon';
-import SoundSphereLogo from '../assets/logo.svg?react';
+import SoundSphereIcon from "./SoundSphereIcon";
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
+// Define the width of the drawer
 const drawerWidth = 240;
 
+// Define styles for the drawer when it is open
 const openedMixin = (theme) => ({
   width: drawerWidth,
   transition: theme.transitions.create('width', {
@@ -32,6 +34,7 @@ const openedMixin = (theme) => ({
   overflowX: 'hidden',
 });
 
+// Define styles for the drawer when it is closed
 const closedMixin = (theme) => ({
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
@@ -44,6 +47,7 @@ const closedMixin = (theme) => ({
   },
 });
 
+// Define a styled component for the drawer header
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
@@ -53,6 +57,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   ...theme.mixins.toolbar,
 }));
 
+// Define a styled component for the AppBar with conditional styles based on 'open' prop
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
@@ -71,6 +76,7 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
+// Define a styled component for the Drawer with conditional styles based on 'open' prop
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     width: drawerWidth,
@@ -88,24 +94,32 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-function NavBar() {
-  const theme = useTheme();
-  const [open, setOpen] = useState(false);
+// Define the NavBar component
+export default function NavBar() {
+  const theme = useTheme(); // Get the theme context
+  const [open, setOpen] = useState(false); // State to manage the drawer's open/close status
+  const [selectedIndex, setSelectedIndex] = useState(0); // State to manage the selected item index
 
+  // Function to open the drawer
   const handleDrawerOpen = () => {
     setOpen(true);
   };
 
+  // Function to close the drawer
   const handleDrawerClose = () => {
     setOpen(false);
   };
 
+  // Function to handle item selection
+  const handleListItemClick = (index) => {
+    setSelectedIndex(index);
+  };
 
   return (
     <>
       <Box sx={{ display: 'flex' }}>
-        <CssBaseline />
-        <AppBar position="fixed" open={open}>
+        <CssBaseline /> {/* Resets CSS baseline */}
+        <AppBar position="fixed" open={open}> {/* AppBar at the top of the screen */}
           <Toolbar>
             <IconButton
               color="inherit"
@@ -114,20 +128,20 @@ function NavBar() {
               edge="start"
               sx={{
                 marginRight: 5,
-                ...(open && { display: 'none' }),
+                ...(open && { display: 'none' }), // Hide button when drawer is open
               }}
             >
               <MenuIcon />
             </IconButton>
             <IconButton href="/">
-              <SvgIcon component={SoundSphereLogo} inheritViewBox sx={{ width: 48, height: 48 }} />
+              <SoundSphereIcon sx={{ width: 48, height: 48 }} />
             </IconButton>
             <Typography variant="h6" noWrap component="div">
               SoundSphere
             </Typography>
           </Toolbar>
         </AppBar>
-        <Drawer variant="permanent" open={open}>
+        <Drawer variant="permanent" open={open}> {/* Permanent drawer */}
           <DrawerHeader>
             <IconButton onClick={handleDrawerClose}>
               {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -135,34 +149,55 @@ function NavBar() {
           </DrawerHeader>
           <Divider />
           <List>
-            {['Similar Songs', 'Smart Playlist'].map((text, index) => (
-              <ListItem key={text} disablePadding sx={{ display: 'block' }}>
-                <ListItemButton
+            <ListItem disablePadding sx={{ display: 'block' }}>
+              <ListItemButton
+                href="/"
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+                onClick={() => handleListItemClick(0)} // Set selected index to 0
+              >
+                <ListItemIcon
                   sx={{
-                    minHeight: 48,
-                    justifyContent: open ? 'initial' : 'center',
-                    px: 2.5,
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                    color: selectedIndex === 0 ? '#FE2C55' : 'inherit', // Change color if selected
                   }}
                 >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: open ? 3 : 'auto',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {index % 2 === 0 ? <LibraryMusicIcon /> : <AutoAwesomeIcon />}
-                  </ListItemIcon>
-                  <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+                  <LibraryMusicIcon />
+                </ListItemIcon>
+                <ListItemText primary="Similar Songs" sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding sx={{ display: 'block' }}>
+              <ListItemButton
+                href="/smart-playlist"
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
+                onClick={() => handleListItemClick(1)} // Set selected index to 1
+              >
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                    color: selectedIndex === 1 ? '#25F4EE' : 'inherit', // Change color if selected
+                  }}
+                >
+                  <AutoAwesomeIcon />
+                </ListItemIcon>
+                <ListItemText primary="Smart Playlist" sx={{ opacity: open ? 1 : 0 }} />
+              </ListItemButton>
+            </ListItem>
           </List>
-
         </Drawer>
       </Box>
     </>
   );
 }
-
-export default NavBar;

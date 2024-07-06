@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import './App.css'
 import { BrowserRouter, Outlet, Route, RouterProvider, Routes, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
 import ErrorPage from './pages/ErrorPage';
-import HomePage from './pages/HomePage';
+import SimilarSongsPage from './pages/SimilarSongsPage';
+import SmartPlayListPage from './pages/SmartPlaylistPage';
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomePage />,
+    element: <SimilarSongsPage />,
     errorElement: <ErrorPage />,
     // loader: null,
     // children: [
@@ -16,6 +17,11 @@ const router = createBrowserRouter([
     //     element: <Songs />,
     //   },
     // ],
+  },
+  {
+    path: "smart-playlist",
+    element: <SmartPlayListPage />,
+    errorElement: <ErrorPage />,
   },
 ]);
 
