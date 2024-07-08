@@ -158,7 +158,7 @@ function SimilarSongsPage() {
                             {searchResults.map((track) => (
                                 <Grid item key={track.id} xs={12} sm={6} md={4} lg={3}>
                                     <Paper elevation={3} sx={{ p: 1, height: '100%', display: 'flex', flexDirection: 'column', borderRadius: "15px" }}>
-                                        <Typography variant="h6" component="h3" sx={{mb: 1, flexGrow: 1 }}>
+                                        <Typography variant="h6" component="h3" sx={{ mb: 1, flexGrow: 1 }}>
                                             {track.name}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -170,7 +170,7 @@ function SimilarSongsPage() {
                                                 src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator`}
                                                 width="100%"
                                                 height="352"
-                                                style={{borderRadius: "15px", border: "none"}}
+                                                style={{ borderRadius: "15px", border: "none" }}
                                                 allowfullscreen=""
                                                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                                                 loading="lazy"
@@ -189,7 +189,7 @@ function SimilarSongsPage() {
             </Grid>
 
             {/* Dialog to display created playlist */}
-            <Dialog open={playlistDialogOpen} onClose={handleClosePlaylistDialog} sx={{ width: "100%", height: "352" }}>
+            <Dialog open={playlistDialogOpen} onClose={handleClosePlaylistDialog} sx={{ width: "100%", height: "352", borderRadius: "15px" }}>
                 <DialogTitle>{loading ? 'Creating Playlist...' : 'Created Playlist'}</DialogTitle>
                 <DialogContent dividers sx={{ flexGrow: 1 }}>
                     {loading ? (
@@ -198,7 +198,7 @@ function SimilarSongsPage() {
                         </Grid>
                     ) : (
                         <>
-                            {playlist && <iframe style={{ borderRadius: "12px" }} src={`https://open.spotify.com/embed/playlist/${playlist.id}?utm_source=generator`} width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>}
+                            {playlist && <iframe style={{ borderRadius: "15px", border: "none" }} src={`https://open.spotify.com/embed/playlist/${playlist.id}?utm_source=generator`} width="100%" height="352" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="eager"></iframe>}
                         </>
                     )}
                 </DialogContent>
