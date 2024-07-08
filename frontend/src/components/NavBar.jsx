@@ -1,5 +1,4 @@
-// Import necessary libraries and components from React and Material-UI
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createTheme, ThemeProvider, styled, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import MuiDrawer from '@mui/material/Drawer';
@@ -17,14 +16,18 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Button from '@mui/material/Button';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import SoundSphereIcon from "./SoundSphereIcon";
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import axios from 'axios';
+import { authUrl } from "../api/SpotifyConfig";
 
-// Define the width of the drawer
 const drawerWidth = 240;
 
-// Define styles for the drawer when it is open
 const openedMixin = (theme) => ({
   width: drawerWidth,
   transition: theme.transitions.create('width', {
@@ -34,7 +37,6 @@ const openedMixin = (theme) => ({
   overflowX: 'hidden',
 });
 
-// Define styles for the drawer when it is closed
 const closedMixin = (theme) => ({
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
@@ -47,17 +49,14 @@ const closedMixin = (theme) => ({
   },
 });
 
-// Define a styled component for the drawer header
 const DrawerHeader = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
 }));
 
-// Define a styled component for the AppBar with conditional styles based on 'open' prop
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
@@ -76,7 +75,6 @@ const AppBar = styled(MuiAppBar, {
   }),
 }));
 
-// Define a styled component for the Drawer with conditional styles based on 'open' prop
 const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     width: drawerWidth,
@@ -94,32 +92,77 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-// Define the NavBar component
-export default function NavBar() {
-  const theme = useTheme(); // Get the theme context
-  const [open, setOpen] = useState(false); // State to manage the drawer's open/close status
-  const [selectedIndex, setSelectedIndex] = useState(0); // State to manage the selected item index
+export default function NavBar({selectedTab}) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(selectedTab);
+  const [token, setToken] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [profileImage, setProfileImage] = useState(null); // State for profile image
+  const [anchorEl, setAnchorEl] = useState(null);
 
-  // Function to open the drawer
+  const handleLogout = () => {
+    setToken(null);
+    setProfile(null);
+    setProfileImage(null); // Clear profile image on logout
+    window.localStorage.removeItem("token");
+  };
+
+  const fetchProfile = async (token) => {
+    try {
+      const response = await axios.get('https://api.spotify.com/v1/me', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setProfile(response.data);
+      if (response.data.images.length > 0) {
+        setProfileImage(response.data.images[0].url); // Set profile image URL if available
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    let token = window.localStorage.getItem("token");
+    if (!token && hash) {
+      token = hash.substring(1).split("&").find(elem => elem.startsWith("access_token")).split("=")[1];
+      window.location.hash = "";
+      window.localStorage.setItem("token", token);
+    }
+    setToken(token);
+    if (token) {
+      fetchProfile(token);
+    }
+  }, []);
+
   const handleDrawerOpen = () => {
     setOpen(true);
   };
 
-  // Function to close the drawer
   const handleDrawerClose = () => {
     setOpen(false);
   };
 
-  // Function to handle item selection
   const handleListItemClick = (index) => {
     setSelectedIndex(index);
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
   };
 
   return (
     <>
       <Box sx={{ display: 'flex' }}>
-        <CssBaseline /> {/* Resets CSS baseline */}
-        <AppBar position="fixed" open={open}> {/* AppBar at the top of the screen */}
+        <CssBaseline />
+        <AppBar position="fixed" open={open}>
           <Toolbar>
             <IconButton
               color="inherit"
@@ -128,7 +171,7 @@ export default function NavBar() {
               edge="start"
               sx={{
                 marginRight: 5,
-                ...(open && { display: 'none' }), // Hide button when drawer is open
+                ...(open && { display: 'none' }),
               }}
             >
               <MenuIcon />
@@ -136,12 +179,44 @@ export default function NavBar() {
             <IconButton href="/">
               <SoundSphereIcon sx={{ width: 48, height: 48 }} />
             </IconButton>
-            <Typography variant="h6" noWrap component="div">
+            <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, textAlign: 'left' }}>
               SoundSphere
             </Typography>
+            {profile ? (
+              <>
+                <IconButton
+                  edge="end"
+                  aria-label="account of current user"
+                  aria-controls="primary-search-account-menu"
+                  aria-haspopup="true"
+                  onClick={handleMenuOpen}
+                  color="inherit"
+                >
+                  {profileImage ? ( // Conditionally render profile image if available
+                    <img src={profileImage} alt="Profile" style={{ width: 48, height: 48, borderRadius: '50%' }} />
+                  ) : (
+                    <AccountCircle />
+                  )}
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  keepMounted
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  open={Boolean(anchorEl)}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem sx={{ pointerEvents: 'none' }}>{`Logged in as: ${profile.display_name}`}</MenuItem>
+                  <Divider />
+                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <Button color="inherit" sx={{backgroundColor: "#1DB954"}} href={authUrl}>Login with Spotify</Button>
+            )}
           </Toolbar>
         </AppBar>
-        <Drawer variant="permanent" open={open}> {/* Permanent drawer */}
+        <Drawer variant="permanent" open={open}>
           <DrawerHeader>
             <IconButton onClick={handleDrawerClose}>
               {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -157,14 +232,14 @@ export default function NavBar() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
-                onClick={() => handleListItemClick(0)} // Set selected index to 0
+                onClick={() => handleListItemClick(0)}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 0,
                     mr: open ? 3 : 'auto',
                     justifyContent: 'center',
-                    color: selectedIndex === 0 ? '#FE2C55' : 'inherit', // Change color if selected
+                    color: selectedIndex === 0 ? '#FE2C55' : 'inherit',
                   }}
                 >
                   <LibraryMusicIcon />
@@ -180,14 +255,14 @@ export default function NavBar() {
                   justifyContent: open ? 'initial' : 'center',
                   px: 2.5,
                 }}
-                onClick={() => handleListItemClick(1)} // Set selected index to 1
+                onClick={() => handleListItemClick(1)}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 0,
                     mr: open ? 3 : 'auto',
                     justifyContent: 'center',
-                    color: selectedIndex === 1 ? '#25F4EE' : 'inherit', // Change color if selected
+                    color: selectedIndex === 1 ? '#25F4EE' : 'inherit',
                   }}
                 >
                   <AutoAwesomeIcon />
