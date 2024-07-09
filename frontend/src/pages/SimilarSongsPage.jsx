@@ -23,6 +23,7 @@ function SimilarSongsPage() {
             setSearchResults(response.data.tracks.items);
         } catch (error) {
             console.error('Error searching tracks:', error);
+            alert(error);
         }
     };
 
@@ -56,6 +57,7 @@ function SimilarSongsPage() {
             return response.data.id;
         } catch (error) {
             console.error('Error fetching user ID:', error);
+            alert(error);
             return null;
         }
     };
@@ -125,6 +127,7 @@ function SimilarSongsPage() {
             setLoading(false);
         } catch (error) {
             console.error('Error creating playlist:', error);
+            alert(error);
             setLoading(false);
         }
     };
@@ -177,7 +180,7 @@ function SimilarSongsPage() {
                                             >
                                             </iframe>
                                         </>
-                                        <Button variant="contained" color="primary" onClick={() => handleSelectTrack(track)}>
+                                        <Button variant="contained" color="inherit" sx={{backgroundColor: '#FE2C55', ":hover": {backgroundColor: "#25F4EE"}}} onClick={() => handleSelectTrack(track)}>
                                             Create Playlist
                                         </Button>
                                     </Paper>

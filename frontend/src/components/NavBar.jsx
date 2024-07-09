@@ -121,6 +121,7 @@ export default function NavBar({selectedTab}) {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      handleLogout();
     }
   };
 
